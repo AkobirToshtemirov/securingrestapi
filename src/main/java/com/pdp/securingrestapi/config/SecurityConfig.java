@@ -6,18 +6,25 @@ import com.pdp.securingrestapi.dto.AppErrorDto;
 import jakarta.servlet.ServletOutputStream;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -30,25 +37,53 @@ import java.util.List;
 public class SecurityConfig {
 
     private final ObjectMapper objectMapper;
+    private final JwtTokenUtil jwtTokenUtil;
+    private final CustomUserDetailsService userDetailsService;
 
-    public SecurityConfig(ObjectMapper objectMapper) {
+    public SecurityConfig(ObjectMapper objectMapper, JwtTokenUtil jwtTokenUtil, CustomUserDetailsService userDetailsService) {
         this.objectMapper = objectMapper;
+        this.jwtTokenUtil = jwtTokenUtil;
+        this.userDetailsService = userDetailsService;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
+                .csrf()
+                .disable()
                 .authorizeHttpRequests()
+                .requestMatchers("/api/auth/**")
+                .permitAll()
                 .anyRequest()
                 .fullyAuthenticated()
                 .and()
-                .httpBasic()
-                .authenticationEntryPoint(authenticationEntryPoint())
+                .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .exceptionHandling()
+                .authenticationEntryPoint(authenticationEntryPoint())
                 .accessDeniedHandler(accessDeniedHandler())
                 .and()
+                .addFilterBefore(new JwtTokenFilter(jwtTokenUtil, userDetailsService), UsernamePasswordAuthenticationFilter.class)
                 .build();
+    }
+
+/*    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+        return configuration.getAuthenticationManager();
+    }*/
+
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
+        authenticationProvider.setPasswordEncoder(passwordEncoder());
+        authenticationProvider.setUserDetailsService(userDetailsService);
+        return authenticationProvider;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager() {
+        return new ProviderManager(authenticationProvider());
     }
 
     @Bean
@@ -85,32 +120,32 @@ public class SecurityConfig {
         };
     }
 
-    @Bean
-    public UserDetailsService userDetailsService() {
-        UserDetails admin = User.builder()
-                .username("admin")
-                .password("123")
-                .roles("ADMIN", "MANAGER")
-                .build();
-
-        UserDetails manager = User.builder()
-                .username("manager")
-                .password("123")
-                .roles("MANAGER")
-                .build();
-
-        UserDetails user = User.builder()
-                .username("user")
-                .password("123")
-                .roles("USER")
-                .build();
-
-        return new InMemoryUserDetailsManager(admin, manager, user);
-    }
+//    @Bean
+//    public UserDetailsService userDetailsService() {
+//        UserDetails admin = User.builder()
+//                .username("admin")
+//                .password("123")
+//                .roles("ADMIN", "MANAGER")
+//                .build();
+//
+//        UserDetails manager = User.builder()
+//                .username("manager")
+//                .password("123")
+//                .roles("MANAGER")
+//                .build();
+//
+//        UserDetails user = User.builder()
+//                .username("user")
+//                .password("123")
+//                .roles("USER")
+//                .build();
+//
+//        return new InMemoryUserDetailsManager(admin, manager, user);
+//    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return NoOpPasswordEncoder.getInstance();
+        return new BCryptPasswordEncoder();
     }
 
     @Bean
