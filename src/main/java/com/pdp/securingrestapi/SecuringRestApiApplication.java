@@ -4,7 +4,6 @@ import com.pdp.securingrestapi.entity.Role;
 import com.pdp.securingrestapi.entity.User;
 import com.pdp.securingrestapi.repository.RoleRepository;
 import com.pdp.securingrestapi.repository.UserRepository;
-import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

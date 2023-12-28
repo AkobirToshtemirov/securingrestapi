@@ -1,8 +1,7 @@
 package com.pdp.securingrestapi.entity;
 
-import lombok.*;
-
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.util.List;
 

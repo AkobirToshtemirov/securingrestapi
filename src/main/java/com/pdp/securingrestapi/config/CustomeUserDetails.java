@@ -1,7 +1,7 @@
 package com.pdp.securingrestapi.config;
 
-import com.pdp.securingrestapi.entity.User;
 import com.pdp.securingrestapi.entity.Role;
+import com.pdp.securingrestapi.entity.User;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
