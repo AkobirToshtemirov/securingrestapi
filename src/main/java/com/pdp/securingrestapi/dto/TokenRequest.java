@@ -1,4 +1,10 @@
 package com.pdp.securingrestapi.dto;
 
-public record TokenRequest(String username, String password) {
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Request body for token generation")
+public record TokenRequest(
+        @Schema(description = "Username for authentication", required = true) String username,
+        @Schema(description = "Password for authentication", required = true) String password
+) {
 }

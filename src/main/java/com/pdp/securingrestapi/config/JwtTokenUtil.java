@@ -17,11 +17,13 @@ public class JwtTokenUtil {
     public static final String SECRET_KEY = "7134743777217A25432A462D4A614E645267556B58703272357538782F413F44";
 
     public String generateToken(@NonNull String username) {
+        long expirationTime = 1000 * 60 * 60; // Token validity duration (1 hour)
+        Date validity = new Date(System.currentTimeMillis() + expirationTime);
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())
                 .setIssuer("https://akobir.me")
-                .setExpiration(new Date(System.currentTimeMillis() + 10 * 60 * 1000))
+                .setExpiration(validity)
                 .signWith(signKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
